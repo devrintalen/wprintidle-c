@@ -20,83 +20,61 @@ This project is a C port of [wprintidle](https://codeberg.org/andyscott/wprintid
 ## Building
 
 ```bash
-make
+make clean && make
 ```
 
 This will:
-1. Download the ext-idle-notify-v1 protocol
-2. Generate protocol headers and source files
-3. Compile the executable
+1. Generate protocol headers and source files
+2. Compile the executable
 
 ## Installation
 
 ```bash
-sudo make install
+make install
 ```
 
-This installs the binary to `/usr/local/bin/wprintidle-c`.
+This installs the binary to `/usr/local/bin/wprintidle-c` and a systemd unit file to `/usr/local/lib/systemd/user/`.
 
 ## Usage
 
-Start the daemon in the background:
+The program has to run continuously to report idle time, unlike `xprintidle`. It can be started manually or by using the supplied systemd unit file:
+
 
 ```bash
+# Manual
 wprintidle-c [timeout_ms] &
+# Systemd
+systemctl --user enable wprintidle-c.service --now
 ```
-
-- `timeout_ms`: Time in milliseconds before considering user idle (default: 1000)
 
 The program will print its PID when started. You can then query the idle time by sending signals:
 
-### Query Idle Time in Seconds
-
 ```bash
-kill -SIGUSR1 <PID>
+pkill -SIGUSR1 wprintidle-c # seconds
+pkill -SIGUSR2 wprintidle-c # milliseconds
 ```
 
-### Query Idle Time in Milliseconds
+Remember that if you are doing this interactively, that your idle time will most always be `0`. You can set up a bash `while` loop or similar to run the command without your input.
 
-```bash
-kill -SIGUSR2 <PID>
-```
+If you need this utility for Emacs org-mode (as I do), you can incorporate it into your `init.el` like so:
 
-### Example
-
-```bash
-# Start the daemon
-$ wprintidle-c 5000 &
-wprintidle-c started (PID: 12345)
-Send SIGUSR1 for idle time in seconds, SIGUSR2 for milliseconds
-
-# Query idle time in seconds
-$ kill -SIGUSR1 12345
-42
-
-# Query idle time in milliseconds
-$ kill -SIGUSR2 12345
-42731
+```elisp
+(org-clock-x11idle-program-name "pkill -SIGUSR1 wprintidle-c")
 ```
 
 ## How It Works
 
 1. Connects to the Wayland display
-2. Binds to the wl_seat and ext_idle_notifier_v1 interfaces
+2. Binds to the `wl_seat` and `ext_idle_notifier_v1` interfaces
 3. Creates an idle notification with the specified timeout
 4. Listens for idle/resumed events from the compositor
-5. Responds to SIGUSR1/SIGUSR2 signals by printing current idle time
+5. Responds to `SIGUSR1`/`SIGUSR2` signals by printing current idle time
 
 ## Differences from xprintidle
 
 - **Must run as a daemon**: Wayland doesn't allow on-demand idle time queries
 - **Signal-based interface**: Use signals to query idle time from the running process
 - **Configurable timeout**: Specify when the user should be considered idle
-
-## Compositor Support
-
-This tool requires a Wayland compositor that implements the ext-idle-notify-v1 protocol, such as:
-- Sway
-- Hyprland
-- wlroots-based compositors
 
 ## License
 

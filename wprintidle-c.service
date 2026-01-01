@@ -1,0 +1,13 @@
+[Unit]
+Description=Wayland Print Idle Monitor
+Documentation=man:wprintidle-c(1)
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/wprintidle-c
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target

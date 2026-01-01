@@ -1,0 +1,4 @@
+*.o
+wprintidle-c
+src/ext-idle-notify-v1-client-protocol.h
+src/ext-idle-notify-v1-protocol.c

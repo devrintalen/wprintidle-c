@@ -1,4 +1,5 @@
 *.o
+*~
 wprintidle-c
 wprintidle-c-daemon
 src/ext-idle-notify-v1-client-protocol.h

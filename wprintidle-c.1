@@ -1,0 +1,128 @@
+.TH WPRINTIDLE-C 1 "2026-01-01" "wprintidle-c" "User Commands"
+.SH NAME
+wprintidle-c \- Wayland idle time monitor with signal-based querying
+.SH SYNOPSIS
+.B wprintidle-c
+.RI [ timeout_ms ]
+.SH DESCRIPTION
+.B wprintidle-c
+monitors user idle time on Wayland compositors that support the
+.B ext-idle-notify-v1
+protocol. The program runs continuously in the background and reports idle time
+when queried via Unix signals.
+.PP
+The idle time represents how long the user has been inactive (no keyboard or
+mouse activity). When queried, the program prints the current idle duration to
+standard output.
+.SH OPTIONS
+.TP
+.I timeout_ms
+Time in milliseconds before the user is considered idle. This is the minimum
+threshold for idle detection. Default: 1000 (1 second).
+.SH SIGNALS
+.TP
+.B SIGUSR1
+Print the current idle time in seconds to standard output.
+.TP
+.B SIGUSR2
+Print the current idle time in milliseconds to standard output.
+.SH USAGE
+To start the idle monitor with default settings:
+.PP
+.nf
+.RS
+wprintidle-c &
+.RE
+.fi
+.PP
+To start with a custom idle timeout of 5 seconds:
+.PP
+.nf
+.RS
+wprintidle-c 5000 &
+.RE
+.fi
+.PP
+To query the current idle time:
+.PP
+.nf
+.RS
+kill -SIGUSR1 $(pidof wprintidle-c)
+.RE
+.fi
+.SH SYSTEMD INTEGRATION
+The program can be managed as a systemd user service:
+.PP
+.nf
+.RS
+systemctl --user enable wprintidle-c.service
+systemctl --user start wprintidle-c.service
+.RE
+.fi
+.PP
+Query idle time when running as a service:
+.PP
+.nf
+.RS
+systemctl --user kill --signal=SIGUSR1 wprintidle-c.service
+.RE
+.fi
+.SH REQUIREMENTS
+.B wprintidle-c
+requires:
+.IP \(bu 2
+A Wayland compositor
+.IP \(bu 2
+Compositor support for the
+.B ext-idle-notify-v1
+protocol
+.PP
+The program will exit with an error if these requirements are not met.
+.SH EXIT STATUS
+.TP
+.B 0
+Successful termination
+.TP
+.B 1
+Error occurred (invalid arguments, Wayland connection failed, or protocol not supported)
+.SH EXAMPLES
+.SS Basic Usage
+Start the monitor and query idle time every 10 seconds:
+.PP
+.nf
+.RS
+wprintidle-c &
+PID=$!
+while true; do
+    kill -SIGUSR1 $PID
+    sleep 10
+done
+.RE
+.fi
+.SS Screen Locker Integration
+Use with a screen locker that activates after 5 minutes of idle time:
+.PP
+.nf
+.RS
+wprintidle-c 1000 &
+PID=$!
+while true; do
+    IDLE=$(kill -SIGUSR1 $PID 2>/dev/null | tail -1)
+    if [ "$IDLE" -gt 300 ]; then
+        swaylock
+    fi
+    sleep 30
+done
+.RE
+.fi
+.SH SEE ALSO
+.BR systemctl (1),
+.BR kill (1),
+.BR signal (7)
+.PP
+Wayland protocol extension:
+.I ext-idle-notify-v1
+.SH AUTHOR
+wprintidle-c contributors
+.SH LICENSE
+GPL-3.0

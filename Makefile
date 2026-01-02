@@ -6,6 +6,7 @@ TARGET = wprintidle-c
 SRC_DIR = src
 PROTOCOL_DIR = protocol
 UNIT_FILE = wprintidle-c.service
+MAN_PAGE = wprintidle-c.1
 
 SOURCES = $(SRC_DIR)/main.c $(SRC_DIR)/ext-idle-notify-v1-protocol.c
 OBJECTS = $(SOURCES:.c=.o)
@@ -39,8 +40,10 @@ clean:
 install: $(TARGET)
 	install -Dm755 $(TARGET) $(DESTDIR)/usr/local/bin/$(TARGET)
 	install -Dm644 $(UNIT_FILE) $(DESTDIR)/usr/local/lib/systemd/user/$(UNIT_FILE)
+	install -Dm644 $(MAN_PAGE) $(DESTDIR)/usr/local/share/man/man1/$(MAN_PAGE)
 	@echo "To enable the service, run: systemctl --user enable wprintidle-c.service"
 
 uninstall:
 	rm -f $(DESTDIR)/usr/local/bin/$(TARGET)
 	rm -f $(DESTDIR)/usr/local/lib/systemd/user/$(UNIT_FILE)
+	rm -f $(DESTDIR)/usr/local/share/man/man1/$(MAN_PAGE)

@@ -1,13 +1,16 @@
 [Unit]
-Description=Wayland Print Idle Monitor
+Description=Wayland Idle Time Monitor Daemon
 Documentation=man:wprintidle-c(1)
 PartOf=graphical-session.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/wprintidle-c
+ExecStart=/usr/local/bin/wprintidle-c-daemon
 Restart=on-failure
 RestartSec=5
+
+# Clean up socket on exit
+ExecStopPost=/bin/sh -c 'rm -f ${XDG_RUNTIME_DIR}/wprintidle-c.sock'
 
 [Install]
 WantedBy=graphical-session.target

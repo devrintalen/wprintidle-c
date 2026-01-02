@@ -1,72 +1,90 @@
 .TH WPRINTIDLE-C 1 "2026-01-01" "wprintidle-c" "User Commands"
 .SH NAME
-wprintidle-c \- Wayland idle time monitor with signal-based querying
+wprintidle-c \- Query idle time from Wayland idle time monitor daemon
 .SH SYNOPSIS
 .B wprintidle-c
-.RI [ timeout_ms ]
+.RI [ -s | --seconds ]
+.RI [ -m | --milliseconds ]
+.RI [ -h | --help ]
 .SH DESCRIPTION
 .B wprintidle-c
-monitors user idle time on Wayland compositors that support the
+is a client program that queries the current user idle time from the
+.B wprintidle-c-daemon
+background service. The daemon monitors idle state on Wayland compositors that
+support the
 .B ext-idle-notify-v1
-protocol. The program runs continuously in the background and reports idle time
-when queried via Unix signals.
+protocol.
 .PP
 The idle time represents how long the user has been inactive (no keyboard or
-mouse activity). When queried, the program prints the current idle duration to
-standard output.
+mouse activity). The client connects to the daemon via a Unix domain socket,
+retrieves the current idle time, prints it to standard output, and exits.
 .SH OPTIONS
 .TP
-.I timeout_ms
-Time in milliseconds before the user is considered idle. This is the minimum
-threshold for idle detection. Default: 1000 (1 second).
-.SH SIGNALS
+.BR -s ", " --seconds
+Print idle time in seconds. This is the default behavior.
 .TP
-.B SIGUSR1
-Print the current idle time in seconds to standard output.
+.BR -m ", " --milliseconds
+Print idle time in milliseconds.
 .TP
-.B SIGUSR2
-Print the current idle time in milliseconds to standard output.
+.BR -h ", " --help
+Display help message and exit.
 .SH USAGE
-To start the idle monitor with default settings:
+Before using the client, ensure the daemon is running (see DAEMON section below).
+.PP
+Query idle time in seconds (default):
 .PP
 .nf
 .RS
-wprintidle-c &
+wprintidle-c
 .RE
 .fi
 .PP
-To start with a custom idle timeout of 5 seconds:
+Query idle time in milliseconds:
 .PP
 .nf
 .RS
-wprintidle-c 5000 &
+wprintidle-c -m
 .RE
 .fi
 .PP
-To query the current idle time:
+Use in shell scripts:
 .PP
 .nf
 .RS
-kill -SIGUSR1 $(pidof wprintidle-c)
+if [ $(wprintidle-c) -gt 300 ]; then
+    echo "Idle for more than 5 minutes"
+fi
 .RE
 .fi
-.SH SYSTEMD INTEGRATION
-The program can be managed as a systemd user service:
+.SH DAEMON
+The
+.B wprintidle-c-daemon
+service must be running before you can query idle time.
+.SS Starting the Daemon
+Start the daemon using systemd (recommended):
 .PP
 .nf
 .RS
-systemctl --user enable wprintidle-c.service
-systemctl --user start wprintidle-c.service
+systemctl --user enable wprintidle-c.service --now
 .RE
 .fi
 .PP
-Query idle time when running as a service:
+Or start manually with custom timeout:
 .PP
 .nf
 .RS
-systemctl --user kill --signal=SIGUSR1 wprintidle-c.service
+wprintidle-c-daemon [timeout_ms] &
 .RE
 .fi
+.PP
+The
+.I timeout_ms
+parameter (default: 1000) specifies how long in milliseconds before the user is
+considered idle.
+.SS Daemon Communication
+The daemon listens on a Unix domain socket at
+.IR $XDG_RUNTIME_DIR/wprintidle-c.sock .
+The client communicates with the daemon through this socket.
 .SH REQUIREMENTS
 .B wprintidle-c
 requires:
@@ -81,48 +99,59 @@ The program will exit with an error if these requirements are not met.
 .SH EXIT STATUS
 .TP
 .B 0
-Successful termination
+Successfully retrieved and printed idle time
 .TP
 .B 1
-Error occurred (invalid arguments, Wayland connection failed, or protocol not supported)
+Error occurred (daemon not running, invalid arguments, or connection failed)
 .SH EXAMPLES
-.SS Basic Usage
-Start the monitor and query idle time every 10 seconds:
+.SS Basic Idle Time Query
+Query current idle time in seconds:
 .PP
 .nf
 .RS
-wprintidle-c &
-PID=$!
-while true; do
-    kill -SIGUSR1 $PID
-    sleep 10
-done
+$ wprintidle-c
+5
 .RE
 .fi
-.SS Screen Locker Integration
-Use with a screen locker that activates after 5 minutes of idle time:
+.SS Emacs org-mode Integration
+Configure Emacs org-mode to use wprintidle-c for idle detection:
 .PP
 .nf
 .RS
-wprintidle-c 1000 &
-PID=$!
-while true; do
-    IDLE=$(kill -SIGUSR1 $PID 2>/dev/null | tail -1)
-    if [ "$IDLE" -gt 300 ]; then
-        swaylock
-    fi
-    sleep 30
-done
+(setq org-clock-x11idle-program-name "wprintidle-c")
+.RE
+.fi
+.SH TROUBLESHOOTING
+If the client reports that the daemon is not running, verify the daemon status:
+.PP
+.nf
+.RS
+systemctl --user status wprintidle-c.service
+.RE
+.fi
+.PP
+Check if the socket exists:
+.PP
+.nf
+.RS
+ls -l $XDG_RUNTIME_DIR/wprintidle-c.sock
+.RE
+.fi
+.PP
+View daemon logs:
+.PP
+.nf
+.RS
+journalctl --user -u wprintidle-c.service -f
 .RE
 .fi
 .SH SEE ALSO
-.BR systemctl (1),
-.BR kill (1),
-.BR signal (7)
+.BR wprintidle-c-daemon ,
+.BR systemctl (1)
 .PP
 Wayland protocol extension:
 .I ext-idle-notify-v1
 .SH AUTHOR
-wprintidle-c contributors
+Devrin Talen <devrin@fastmail.com>
 .SH LICENSE
 GPL-3.0

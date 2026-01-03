@@ -5,7 +5,7 @@ PartOf=graphical-session.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/wprintidle-c-daemon
+ExecStart=/usr/bin/wprintidle-c-daemon
 Restart=on-failure
 RestartSec=5
 

@@ -45,14 +45,14 @@ clean:
 	rm -f $(PROTOCOL_HEADER) $(PROTOCOL_SOURCE)
 
 install: $(DAEMON_TARGET) $(CLIENT_TARGET)
-	install -Dm755 $(DAEMON_TARGET) $(DESTDIR)/usr/local/bin/$(DAEMON_TARGET)
-	install -Dm755 $(CLIENT_TARGET) $(DESTDIR)/usr/local/bin/$(CLIENT_TARGET)
-	install -Dm644 $(UNIT_FILE) $(DESTDIR)/usr/local/lib/systemd/user/$(UNIT_FILE)
-	install -Dm644 $(MAN_PAGE) $(DESTDIR)/usr/local/share/man/man1/$(MAN_PAGE)
+	install -Dm755 $(DAEMON_TARGET) $(DESTDIR)/usr/bin/$(DAEMON_TARGET)
+	install -Dm755 $(CLIENT_TARGET) $(DESTDIR)/usr/bin/$(CLIENT_TARGET)
+	install -Dm644 $(UNIT_FILE) $(DESTDIR)/usr/lib/systemd/user/$(UNIT_FILE)
+	install -Dm644 $(MAN_PAGE) $(DESTDIR)/usr/share/man/man1/$(MAN_PAGE)
 	@echo "To enable the service, run: systemctl --user enable wprintidle-c.service"
 
 uninstall:
-	rm -f $(DESTDIR)/usr/local/bin/$(DAEMON_TARGET)
-	rm -f $(DESTDIR)/usr/local/bin/$(CLIENT_TARGET)
-	rm -f $(DESTDIR)/usr/local/lib/systemd/user/$(UNIT_FILE)
-	rm -f $(DESTDIR)/usr/local/share/man/man1/$(MAN_PAGE)
+	rm -f $(DESTDIR)/usr/bin/$(DAEMON_TARGET)
+	rm -f $(DESTDIR)/usr/bin/$(CLIENT_TARGET)
+	rm -f $(DESTDIR)/usr/lib/systemd/user/$(UNIT_FILE)
+	rm -f $(DESTDIR)/usr/share/man/man1/$(MAN_PAGE)
